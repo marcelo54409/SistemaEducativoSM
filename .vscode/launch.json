@@ -1,0 +1,31 @@
+{
+  // Use IntelliSense para saber los atributos posibles.
+  // Mantenga el puntero para ver las descripciones de los existentes atributos.
+  // Para más información, visite: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "tmkt3_proyect",
+      "request": "launch",
+      "type": "dart"
+    },
+    {
+      "name": "tmkt3_proyect (profile mode)",
+      "request": "launch",
+      "type": "dart",
+      "flutterMode": "profile"
+    },
+    {
+      "name": "tmkt3_proyect (release mode)",
+      "request": "launch",
+      "type": "dart",
+      "flutterMode": "release"
+    },
+    {
+      "name": "Flutter",
+      "request": "launch",
+      "type": "dart",
+      "args": ["--web-port", "34883"]
+    }
+  ]
+}

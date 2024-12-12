@@ -1,0 +1,51 @@
+name: tmkt3_app
+description: "A new Flutter project."
+publish_to: "none"
+version: 0.1.0
+
+environment:
+  sdk: ">=3.4.3 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  http: ^1.2.2
+  fpdart: ^1.1.1
+  flutter_riverpod: ^2.6.1
+  riverpod_annotation: ^2.6.1
+  riverpod_lint: ^2.6.3
+  shared_preferences: ^2.3.3
+  fl_chart: ^0.69.2
+  flutter_native_splash: ^2.4.3
+  go_router: ^14.6.2
+  flutter_launcher_icons: ^0.14.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+  riverpod_generator: ^2.6.3
+  build_runner: ^2.4.13
+  custom_lint: ^0.7.0
+
+flutter:
+  assets:
+    - assets/images/
+  uses-material-design: true
+
+flutter_native_splash:
+  color: "#ffffff" # Color de fondo del splash screen.
+  image: assets/images/icono.png # Ruta de tu imagen de splash (asegúrate de que exista).
+  android: true # Habilita el splash screen para Android.
+  ios: true # Habilita el splash screen para iOS.
+  web: true # Habilita el splash screen para la web.
+  android_gravity: center # Centra la imagen en Android.
+  ios_content_mode: scaleAspectFit # Ajusta el contenido en iOS.
+  fullscreen: true # Pantalla completa para el splash screen.
+  # Opcional: Configuración para la imagen secundaria.
+  # secondary_image: assets/secondary_icon.png
+
+flutter_icons:
+  android: true # Habilita el icono para Android
+  ios: true # Habilita el icono para iOS
+  image_path: "assets/images/icono.png"
