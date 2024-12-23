@@ -7,9 +7,13 @@ import 'package:tmkt3_app/features/auth/view/page/signin_page.dart';
 import 'package:tmkt3_app/features/auth/view/page/signup_page.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tmkt3_app/features/auth/viewmodel/auth_viewmodel.dart';
-import 'package:tmkt3_app/features/home/cliente/home_client_screen.dart';
+import 'package:tmkt3_app/features/home/alumnos/alumnos_get_screen.dart';
+import 'package:tmkt3_app/features/home/asignacion_escala/asig_escala_screen.dart';
+import 'package:tmkt3_app/features/home/concepto/concepto_get_screen.dart';
+import 'package:tmkt3_app/features/home/condonacion/condonacion_get_screen.dart';
+import 'package:tmkt3_app/features/home/deuda/deuda_get_screen.dart';
+import 'package:tmkt3_app/features/home/escalas/escalas_get_screen.dart';
 import 'package:tmkt3_app/features/home/principal/home_admin_screen.dart';
-import 'package:tmkt3_app/features/home/supervisor/home_supervisor_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -25,10 +29,10 @@ class MainApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, ref) {
     final router = ref.watch(goRouterProvider);
-    return MaterialApp.router(
+    return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightThemeMode,
-      routerConfig: router,
+      home: AsigEscalaScreen(),
     );
   }
 }

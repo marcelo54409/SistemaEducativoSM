@@ -48,7 +48,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
             ..hideCurrentSnackBar()
             ..showSnackBar(SnackBar(
               backgroundColor: Color(0xFFFF7C1C),
-              content: Text('Usuario registrado: ${data?.user.name}'),
+              content: Text('Usuario registrado: ${data?.user.username}'),
             ));
           Navigator.of(context).pop(); // Regresar a la pantalla anterior
         },

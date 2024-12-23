@@ -42,7 +42,6 @@ class AuthRemoteRepository {
         return Right(UserModel(
           user: User.fromJson(user["data"]["user"]),
           token: user['data']['token'],
-          role: Role.fromJson(user['data']['role']),
         ));
       } else {
         final error = jsonDecode(response.body);
@@ -95,7 +94,6 @@ class AuthRemoteRepository {
         return Right(UserModel(
           user: User.fromJson(user["data"]["user"]),
           token: user['data']['token'],
-          role: Role.fromJson(user['data']['role']),
         ));
       } else {
         final error = jsonDecode(response.body);

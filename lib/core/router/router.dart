@@ -10,10 +10,14 @@ import 'package:tmkt3_app/features/auth/view/page/signin_page.dart';
 import 'package:tmkt3_app/features/auth/view/page/signup_page.dart';
 import 'package:tmkt3_app/features/auth/view/page/splash_screen.dart';
 import 'package:tmkt3_app/features/auth/viewmodel/auth_viewmodel.dart';
-import 'package:tmkt3_app/features/home/cliente/home_client_screen.dart';
+import 'package:tmkt3_app/features/home/alumnos/alumnos_get_screen.dart';
+import 'package:tmkt3_app/features/home/concepto/concepto_get_screen.dart';
+import 'package:tmkt3_app/features/home/escalas/escalas_get_screen.dart';
+
 import 'package:tmkt3_app/features/home/principal/home_admin_screen.dart';
 import 'package:tmkt3_app/features/home/supervisor/home_supervisor_screen.dart';
 import 'package:tmkt3_app/features/auth/model/user_model.dart';
+import 'package:tmkt3_app/features/home/usuarios/usuarios_get_screen.dart';
 
 part 'router.g.dart';
 
@@ -23,9 +27,8 @@ GoRouter goRouter(ref) {
 
   /// Lógica de redirección basada en el estado de autenticación
   String? redirectLogic(BuildContext context, GoRouterState state) {
-    log('Redirecting to ${state.uri.path}');
-    final isLoggingIn =
-        state.uri.path == '/signin' || state.uri.path == '/signup';
+    final isLoggingIn = state.uri.path.startsWith('/signin') ||
+        state.uri.path.startsWith('/signup');
 
     // Manejar null de manera explícita
     if (authState == null) {
@@ -35,10 +38,9 @@ GoRouter goRouter(ref) {
     // Manejar AsyncValue de manera segura
     if (authState is AsyncData<UserModel?>) {
       final user = authState.value;
-      log('Usererasd: ${user != null} token: ${user?.token.isNotEmpty}');
 
-      final isLoggedIn = user != null && user.token?.isNotEmpty == true;
-      log('Is logged in: $isLoggedIn');
+      final isLoggedIn = user != null && user.token.isNotEmpty == true;
+
       if (!isLoggedIn) {
         // Usuario no logueado, redirigir a SignIn si no está ya allí
         return isLoggingIn ? null : '/signin';
@@ -47,24 +49,19 @@ GoRouter goRouter(ref) {
       // Usuario está logueado
       log("path ${state.uri.path}");
       if (isLoggedIn) {
-        log('Already logged in, redirecting to home');
-        // Si está en /signin o /signup, redirigir a la página principal según el rol
-        final role = user.role?.name?.toLowerCase() ?? '';
-        if (role == 'admin') {
-          return '/admin';
+        // Si el usuario está logueado y trata de acceder a /signin o /signup, lo llevas a /admin
+        if (isLoggingIn) {
+          return "/admin";
         }
-        if (role == 'client') {
-          return '/client';
-        }
-        if (role == 'supervisor') {
-          return '/supervisor';
-        }
-        // Ruta por defecto si no se encuentra el rol
-        return '/client';
-      }
 
-      // Si ya está logueado y no está en la página de login, no redirigir
-      return null;
+        // Si el usuario está logueado y se encuentra en la splash (ruta '/'), redirigir a /admin
+        if (state.uri.path == '/') {
+          return "/admin";
+        }
+
+        // Si el usuario está logueado y no está en rutas de autenticación ni en '/', no redirigir.
+        return null;
+      }
     }
 
     if (authState is AsyncLoading) {
@@ -105,12 +102,16 @@ GoRouter goRouter(ref) {
         builder: (context, state) => const HomeAdminScreen(),
       ),
       GoRoute(
-        path: '/client',
-        builder: (context, state) => const HomeClientScreen(),
+        path: '/alumnos',
+        builder: (context, state) => AlumnosGetScreen(),
       ),
       GoRoute(
-        path: '/supervisor',
-        builder: (context, state) => const HomeSupervisorScreen(),
+        path: '/escalas',
+        builder: (context, state) => EscalasGetScreen(),
+      ),
+      GoRoute(
+        path: '/conceptos',
+        builder: (context, state) => ConceptoGetScreen(),
       ),
     ],
   );

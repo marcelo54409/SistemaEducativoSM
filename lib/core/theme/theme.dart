@@ -34,6 +34,23 @@ class AppTheme {
       selectedItemColor: Pallete.greenColor,
       unselectedItemColor: Pallete.inactiveBottomBarItemColor,
     ),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: ButtonStyle(
+        backgroundColor: MaterialStateProperty.all(Colors.green.shade600),
+        foregroundColor: MaterialStateProperty.all(Colors.white),
+        side: MaterialStateProperty.all(
+          BorderSide(
+            color: Colors.green.shade600,
+            width: 1,
+          ),
+        ),
+        shape: MaterialStateProperty.all(
+          RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(6),
+          ),
+        ),
+      ),
+    ),
   );
 
   static const TextTheme textTheme = TextTheme(

@@ -11,7 +11,7 @@ class Pallete {
 
   static const Color backgroundColor = Color(0xffE7E3E3);
 
-  static const Color buttonColor = Color(0xFFFF7C1C);
+  static const Color buttonColor = Color(0xFFdb5623);
   static const Color gradient1 = Color(0xFFBB3FDD);
   static const Color gradient2 = Color.fromRGBO(251, 109, 169, 1);
   static const Color gradient3 = Color.fromRGBO(255, 159, 124, 1);

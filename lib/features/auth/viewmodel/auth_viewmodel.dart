@@ -71,10 +71,17 @@ class AuthViewmodel extends _$AuthViewmodel {
     );
   }
 
-  Future<void> getData() async {
+  Future<UserModel?> getData() async {
     state = const AsyncValue.loading();
     final token = _authLocalRepository.getToken();
-    if (token != null) {}
+    final user = await _authLocalRepository.getUser();
+    if (token != null && user != null) {
+      state = AsyncValue.data(user);
+      return user;
+    } else {
+      state = const AsyncValue.data(null);
+      return null;
+    }
   }
 
   Future<void> logout() async {

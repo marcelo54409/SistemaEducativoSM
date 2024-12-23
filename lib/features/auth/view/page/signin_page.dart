@@ -10,7 +10,7 @@ import 'package:tmkt3_app/features/auth/repositories/auth_remote_repository.dart
 import 'package:tmkt3_app/features/auth/view/page/signup_page.dart';
 import 'package:tmkt3_app/features/auth/view/widgets/custom_text_form_field.dart';
 import 'package:tmkt3_app/features/auth/viewmodel/auth_viewmodel.dart';
-import 'package:tmkt3_app/features/home/cliente/home_client_screen.dart';
+
 import 'package:tmkt3_app/features/home/principal/home_admin_screen.dart';
 import 'package:tmkt3_app/features/home/supervisor/home_supervisor_screen.dart';
 
@@ -86,10 +86,9 @@ class _SigninPageState extends ConsumerState<SigninPage> {
                                 children: [
                                   Image.asset(
                                     'assets/images/logo_principal.png',
-                                    width: 50,
-                                    height: 50,
+                                    width: 300,
+                                    height: 300,
                                   ),
-                                  Text('TMKT3', style: textTheme.titleLarge),
                                 ],
                               ),
                               const SizedBox(height: 45),
@@ -169,17 +168,6 @@ class _SigninPageState extends ConsumerState<SigninPage> {
                                 ),
                               ),
                               const SizedBox(height: 9),
-                              kIsWeb
-                                  ? SizedBox(
-                                      width: constraints.maxWidth,
-                                      child: ElevatedButton(
-                                        onPressed: () {
-                                          context.push('/signup');
-                                        },
-                                        child: Text("Registrarme"),
-                                      ),
-                                    )
-                                  : SizedBox(),
                             ],
                           ),
                         ),
