@@ -1,4 +1,5 @@
 import 'dart:developer';
+import 'package:dropdown_textfield/dropdown_textfield.dart';
 import 'package:flutter/material.dart';
 import 'package:tmkt3_app/core/services/api_dio.dart';
 import 'package:tmkt3_app/features/home/alumnos/model/alumno_model.dart';
@@ -11,15 +12,28 @@ class AlumnosGetController {
     this.context = context;
   }
 
-  Future<List<AlumnoModelo>> getAlumnos() async {
+  Future getAlumnos({bool includeDropdown = false}) async {
     try {
       var response = await api.getRequest('/alumnos');
       if (response != null) {
         List<AlumnoModelo> alumnos = [];
+        List<DropDownValueModel> dropdownAlumnos = [];
         for (var item in response) {
-          alumnos.add(AlumnoModelo.fromJson(item));
+          final alumno = AlumnoModelo.fromJson(item);
+          alumnos.add(alumno);
+          dropdownAlumnos.add(DropDownValueModel(
+            value:
+                alumno.id, // Asumiendo que `idAlumno` existe en `AlumnoModelo`
+            name:
+                "${alumno.primerNombre} ${alumno.apellidoPaterno}", // Asumiendo que `nombreCompleto` existe en `AlumnoModelo`
+          ));
         }
-        return alumnos;
+        // Retorna según el parámetro includeDropdown
+        if (includeDropdown) {
+          return {'alumnos': alumnos, 'dropdown': dropdownAlumnos};
+        } else {
+          return alumnos;
+        }
       } else {
         showMessage("Error al obtener la lista de alumnos", isError: true);
       }
@@ -27,7 +41,7 @@ class AlumnosGetController {
       log("Error en getAlumnos: $e");
       showMessage("Error de conexión al servidor", isError: true);
     }
-    return [];
+    return includeDropdown ? {'alumnos': [], 'dropdown': []} : [];
   }
 
   Future<void> createAlumno(AlumnoModelo alumno) async {

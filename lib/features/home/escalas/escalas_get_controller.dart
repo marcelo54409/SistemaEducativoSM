@@ -1,4 +1,5 @@
 import 'dart:developer';
+import 'package:dropdown_textfield/dropdown_textfield.dart';
 import 'package:flutter/material.dart';
 import 'package:tmkt3_app/core/services/api_dio.dart';
 import 'package:tmkt3_app/features/home/escalas/model/escalas_model.dart';
@@ -11,18 +12,28 @@ class EscalasController {
     this.context = context;
   }
 
-  Future<List<EscalasModel>> getEscalas() async {
+  Future getEscalas({bool includeDropdown = false}) async {
     try {
       var response = await api.getRequest('/escala');
       if (response != null) {
-        print(response.toString());
         List<EscalasModel> escalas = [];
+        List<DropDownValueModel> dropdownEscalas = [];
         for (var item in response) {
-          print(item.toString());
-          escalas.add(EscalasModel.fromJson(item));
-          print("seguimo");
+          final escala = EscalasModel.fromJson(item);
+          escalas.add(escala);
+          dropdownEscalas.add(DropDownValueModel(
+            value: escala
+                .idEscala, // Asumiendo que `idEscala` existe en `EscalasModel`
+            name: escala
+                .descripcion, // Asumiendo que `nombreEscala` existe en `EscalasModel`
+          ));
         }
-        return escalas;
+        // Retorna según el parámetro includeDropdown
+        if (includeDropdown) {
+          return {'escalas': escalas, 'dropdown': dropdownEscalas};
+        } else {
+          return escalas;
+        }
       } else {
         showMessage("Error al obtener la lista de escalas", isError: true);
       }
@@ -30,7 +41,7 @@ class EscalasController {
       log("Error en getEscalas: $e");
       showMessage("Error de conexión al servidor", isError: true);
     }
-    return [];
+    return includeDropdown ? {'escalas': [], 'dropdown': []} : [];
   }
 
   Future<void> createEscala(EscalasModel escala) async {

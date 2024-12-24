@@ -1,8 +1,18 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:tmkt3_app/core/widgets/custom_text_formulario.dart';
+import 'package:tmkt3_app/features/home/alumnos/alumnos_get_controller.dart';
+import 'package:tmkt3_app/features/home/alumnos/model/alumno_model.dart';
+import 'package:tmkt3_app/features/home/concepto/concepto_get_controller.dart';
+import 'package:tmkt3_app/features/home/concepto/model/concepto_model.dart';
 import 'package:tmkt3_app/features/home/condonacion/condonacion_get_controller.dart';
 import 'package:tmkt3_app/features/home/condonacion/model/concepto_model.dart';
+import 'package:tmkt3_app/features/home/deuda/deuda_get_controller.dart';
+import 'package:tmkt3_app/features/home/deuda/model/deuda_model.dart';
+import 'package:tmkt3_app/features/home/escalas/escalas_get_controller.dart';
+import 'package:tmkt3_app/features/home/escalas/model/escalas_model.dart';
 import 'package:tmkt3_app/features/home/widgets/generic_list_screen.dart';
 
 class CondonacionGetScreen extends StatefulWidget {
@@ -14,6 +24,10 @@ class _CondonacionGetScreenState extends State<CondonacionGetScreen> {
   CondonacionController con = CondonacionController();
   final TextEditingController searchController = TextEditingController();
   List<CondonacionModel> condonaciones = [];
+
+  List<EscalasModel> escalas = [];
+  List<DeudaModel> deudas = [];
+  List<ConceptoModel> conceptos = [];
   List<CondonacionModel> filteredCondonaciones = [];
   bool isLoading = true;
   String? errorMessage;
@@ -48,7 +62,15 @@ class _CondonacionGetScreenState extends State<CondonacionGetScreen> {
         errorMessage = null;
       });
       final response = await con.getCondonaciones();
+
+      final escala = await EscalasController().getEscalas();
+      final concepto = await ConceptoGetController().getConceptos();
+      final deuda = await DeudaController().getDeudasWithAlumnoNames();
+
       setState(() {
+        escalas = escala;
+        conceptos = concepto;
+        deudas = deuda;
         condonaciones = response;
         filteredCondonaciones = response;
         isLoading = false;
@@ -145,46 +167,78 @@ class _CondonacionGetScreenState extends State<CondonacionGetScreen> {
     }
 
     final columns = [
-      DataColumn(label: Text("ID Deuda")),
+      DataColumn(label: Text("Alumno")),
+      DataColumn(label: Text("Escala")),
+      DataColumn(label: Text("Concepto")),
       DataColumn(label: Text("Fecha")),
       DataColumn(label: Text("Acciones")),
     ];
 
-    final rows = filteredCondonaciones
-        .map(
-          (condonacion) => DataRow(
-            cells: [
-              DataCell(Text(condonacion.idDeuda.toString())),
-              DataCell(Text(condonacion.fecha)),
-              DataCell(
-                Row(
-                  children: [
-                    IconButton(
-                      icon: const Icon(
-                        Icons.edit,
-                        color: Colors.blueAccent,
-                      ),
-                      onPressed: () {
-                        _showRegisterForm(context, condonacion: condonacion);
-                      },
-                    ),
-                    IconButton(
-                      icon: const Icon(
-                        Icons.delete,
-                        color: Colors.red,
-                      ),
-                      onPressed: () async {
-                        await con.deleteCondonacion(condonacion.idCondonacion);
-                        await _loadCondonaciones();
-                      },
-                    ),
-                  ],
+    final rows = filteredCondonaciones.map((condonacion) {
+      final deuda = deudas.firstWhere(
+        (deuda) => deuda.idDeuda == condonacion.idDeuda,
+        orElse: () => DeudaModel(
+          idDeuda: 0,
+          idAlumno: 0,
+          idAsignarEscala: 0,
+          idAsignarConcepto: 0,
+          fecha: "",
+          nombreAlumno: "",
+        ),
+      );
+      log("${deuda.nombreAlumno}");
+
+      final escala = escalas.firstWhere(
+        (escala) => escala.idEscala == deuda.idAsignarEscala,
+        orElse: () => EscalasModel(
+          idEscala: 0,
+          escala: "No asignado",
+          descripcion: "No asignado",
+          monto: 0,
+        ),
+      );
+      final concepto = conceptos.firstWhere(
+        (concepto) => concepto.idConcepto == deuda.idAsignarConcepto,
+        orElse: () => ConceptoModel(
+          idConcepto: 0,
+          concepto: "No asignado",
+          descripcion: "No asignado",
+        ),
+      );
+      return DataRow(
+        cells: [
+          DataCell(Text(deuda.nombreAlumno ?? "Desconocido")),
+          DataCell(Text(escala.descripcion)),
+          DataCell(Text(concepto.descripcion)),
+          DataCell(Text(condonacion.fecha)),
+          DataCell(
+            Row(
+              children: [
+                IconButton(
+                  icon: const Icon(
+                    Icons.edit,
+                    color: Colors.blueAccent,
+                  ),
+                  onPressed: () {
+                    _showRegisterForm(context, condonacion: condonacion);
+                  },
                 ),
-              ),
-            ],
+                IconButton(
+                  icon: const Icon(
+                    Icons.delete,
+                    color: Colors.red,
+                  ),
+                  onPressed: () async {
+                    await con.deleteCondonacion(condonacion.idCondonacion);
+                    await _loadCondonaciones();
+                  },
+                ),
+              ],
+            ),
           ),
-        )
-        .toList();
+        ],
+      );
+    }).toList();
 
     return isLoading
         ? const Center(child: CircularProgressIndicator())

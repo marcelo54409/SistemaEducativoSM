@@ -33,4 +33,9 @@ class DeudaModel {
       'fecha': fecha,
     };
   }
+
+  @override
+  String toString() {
+    return 'DeudaModel{idDeuda: $idDeuda, idAlumno: $idAlumno, idAsignarEscala: $idAsignarEscala, idAsignarConcepto: $idAsignarConcepto, fecha: $fecha, nombreAlumno: $nombreAlumno}';
+  }
 }

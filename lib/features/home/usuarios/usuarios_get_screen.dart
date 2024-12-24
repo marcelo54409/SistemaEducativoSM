@@ -34,7 +34,7 @@ class _UserScreenState extends State<UserScreen> {
     setState(() {
       filteredUsers = users.where((user) {
         final fullInfo =
-            "${user.name} ${user.email} ${user.username} ${user.businessName} ${user.jobTitle} ${user.phone}"
+            "${user.username} ${user.email} ${user.roleId} ${user.createdAt} ${user.updatedAt}"
                 .toLowerCase();
         return fullInfo.contains(query.toLowerCase());
       }).toList();
@@ -65,18 +65,12 @@ class _UserScreenState extends State<UserScreen> {
   Widget build(BuildContext context) {
     void _showRegisterForm(BuildContext context, {UserModel? user}) {
       final _formKey = GlobalKey<FormState>();
-      final TextEditingController name =
-          TextEditingController(text: user?.name ?? '');
-      final TextEditingController email =
-          TextEditingController(text: user?.email ?? '');
-      final TextEditingController businessName =
-          TextEditingController(text: user?.businessName ?? '');
-      final TextEditingController jobTitle =
-          TextEditingController(text: user?.jobTitle ?? '');
-      final TextEditingController phone =
-          TextEditingController(text: user?.phone ?? '');
       final TextEditingController username =
           TextEditingController(text: user?.username ?? '');
+      final TextEditingController email =
+          TextEditingController(text: user?.email ?? '');
+      final TextEditingController roleId =
+          TextEditingController(text: user?.roleId?.toString() ?? '');
 
       showDialog(
         context: context,
@@ -103,11 +97,11 @@ class _UserScreenState extends State<UserScreen> {
                     ),
                     SizedBox(height: 20),
                     CustomTextFormulario(
-                      hint: "Nombre",
-                      controller: name,
+                      hint: "Nombre de Usuario",
+                      controller: username,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return "El nombre es requerido";
+                          return "El nombre de usuario es requerido";
                         }
                         return null;
                       },
@@ -125,44 +119,14 @@ class _UserScreenState extends State<UserScreen> {
                     ),
                     SizedBox(height: 20),
                     CustomTextFormulario(
-                      hint: "Nombre de la Empresa",
-                      controller: businessName,
+                      hint: "ID de Rol (opcional)",
+                      controller: roleId,
                       validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return "El nombre de la empresa es requerido";
-                        }
-                        return null;
-                      },
-                    ),
-                    SizedBox(height: 20),
-                    CustomTextFormulario(
-                      hint: "Puesto",
-                      controller: jobTitle,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return "El puesto es requerido";
-                        }
-                        return null;
-                      },
-                    ),
-                    SizedBox(height: 20),
-                    CustomTextFormulario(
-                      hint: "Teléfono",
-                      controller: phone,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return "El teléfono es requerido";
-                        }
-                        return null;
-                      },
-                    ),
-                    SizedBox(height: 20),
-                    CustomTextFormulario(
-                      hint: "Nombre de Usuario",
-                      controller: username,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return "El nombre de usuario es requerido";
+                        if (value != null && value.isNotEmpty) {
+                          final parsedValue = int.tryParse(value);
+                          if (parsedValue == null) {
+                            return "El ID de rol debe ser un número válido";
+                          }
                         }
                         return null;
                       },
@@ -173,12 +137,13 @@ class _UserScreenState extends State<UserScreen> {
                         if (_formKey.currentState!.validate()) {
                           final newUser = UserModel(
                             id: user?.id ?? 0,
-                            name: name.text,
-                            email: email.text,
-                            businessName: businessName.text,
-                            jobTitle: jobTitle.text,
-                            phone: phone.text,
                             username: username.text,
+                            email: email.text,
+                            roleId: roleId.text.isEmpty
+                                ? null
+                                : int.parse(roleId.text),
+                            createdAt: user?.createdAt ?? DateTime.now(),
+                            updatedAt: DateTime.now(),
                           );
                           if (newUser.id != 0) {
                             await con.updateUser(newUser);
@@ -200,12 +165,11 @@ class _UserScreenState extends State<UserScreen> {
     }
 
     final columns = [
-      DataColumn(label: Text("Nombre")),
+      DataColumn(label: Text("Nombre de Usuario")),
       DataColumn(label: Text("Correo Electrónico")),
-      DataColumn(label: Text("Empresa")),
-      DataColumn(label: Text("Puesto")),
-      DataColumn(label: Text("Teléfono")),
-      DataColumn(label: Text("Usuario")),
+      DataColumn(label: Text("ID de Rol")),
+      DataColumn(label: Text("Creado")),
+      DataColumn(label: Text("Actualizado")),
       DataColumn(label: Text("Acciones")),
     ];
 
@@ -213,12 +177,11 @@ class _UserScreenState extends State<UserScreen> {
         .map(
           (user) => DataRow(
             cells: [
-              DataCell(Text(user.name)),
-              DataCell(Text(user.email)),
-              DataCell(Text(user.businessName)),
-              DataCell(Text(user.jobTitle)),
-              DataCell(Text(user.phone)),
               DataCell(Text(user.username)),
+              DataCell(Text(user.email)),
+              DataCell(Text(user.roleId?.toString() ?? "N/A")),
+              DataCell(Text(user.createdAt.toString())),
+              DataCell(Text(user.updatedAt.toString())),
               DataCell(
                 Row(
                   children: [

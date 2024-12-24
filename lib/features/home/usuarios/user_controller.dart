@@ -14,8 +14,9 @@ class UserController {
   // Método para obtener todos los usuarios
   Future<List<UserModel>> getUsers() async {
     try {
-      var response = await api.getRequest('/users');
+      var response = await api.getRequest('/auth/users');
       if (response != null) {
+        response = response['data'];
         List<UserModel> users = [];
         for (var item in response) {
           users.add(UserModel.fromMap(item));

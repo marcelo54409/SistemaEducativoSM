@@ -1,32 +1,29 @@
 class UserModel {
   final int id;
-  final String email;
-  final String businessName;
-  final String name;
-  final String jobTitle;
-  final String phone;
   final String username;
+  final String email;
+  final int? roleId; // Puede ser null
+  final DateTime createdAt;
+  final DateTime updatedAt;
 
   UserModel({
     required this.id,
-    required this.email,
-    required this.businessName,
-    required this.name,
-    required this.jobTitle,
-    required this.phone,
     required this.username,
+    required this.email,
+    this.roleId,
+    required this.createdAt,
+    required this.updatedAt,
   });
 
   // Método para convertir el modelo a un mapa (Map<String, dynamic>)
   Map<String, dynamic> toMap() {
     return {
       'id': id,
-      'email': email,
-      'businessName': businessName,
-      'name': name,
-      'jobTitle': jobTitle,
-      'phone': phone,
       'username': username,
+      'email': email,
+      'roleId': roleId,
+      'createdAt': createdAt.toIso8601String(),
+      'updatedAt': updatedAt.toIso8601String(),
     };
   }
 
@@ -34,12 +31,11 @@ class UserModel {
   factory UserModel.fromMap(Map<String, dynamic> map) {
     return UserModel(
       id: map['id'],
-      email: map['email'],
-      businessName: map['businessName'],
-      name: map['name'],
-      jobTitle: map['jobTitle'],
-      phone: map['phone'],
       username: map['username'],
+      email: map['email'],
+      roleId: map['roleId'], // Puede ser null
+      createdAt: DateTime.parse(map['createdAt']),
+      updatedAt: DateTime.parse(map['updatedAt']),
     );
   }
 }

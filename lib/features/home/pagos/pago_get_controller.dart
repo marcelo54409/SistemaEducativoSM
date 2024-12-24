@@ -1,6 +1,7 @@
 import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:tmkt3_app/core/services/api_dio.dart';
+import 'package:tmkt3_app/features/home/padres/model/padre_model.dart';
 import 'package:tmkt3_app/features/home/pagos/model/pago_model.dart';
 
 class PagoController {
@@ -20,6 +21,25 @@ class PagoController {
           pagos.add(PagoModel.fromJson(item));
         }
         return pagos;
+      } else {
+        showMessage("Error al obtener la lista de pagos", isError: true);
+      }
+    } catch (e) {
+      log("Error en getPagos: $e");
+      showMessage("Error de conexión al servidor", isError: true);
+    }
+    return [];
+  }
+
+  Future<List<PadreModel>> getPadres() async {
+    try {
+      var response = await api.getRequest('/padres');
+      if (response != null) {
+        List<PadreModel> padres = [];
+        for (var item in response) {
+          padres.add(PadreModel.fromMap(item));
+        }
+        return padres;
       } else {
         showMessage("Error al obtener la lista de pagos", isError: true);
       }

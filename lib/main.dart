@@ -8,12 +8,16 @@ import 'package:tmkt3_app/features/auth/view/page/signup_page.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tmkt3_app/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:tmkt3_app/features/home/alumnos/alumnos_get_screen.dart';
+import 'package:tmkt3_app/features/home/asignacion_concepto/asig_concepto_screen.dart';
 import 'package:tmkt3_app/features/home/asignacion_escala/asig_escala_screen.dart';
 import 'package:tmkt3_app/features/home/concepto/concepto_get_screen.dart';
 import 'package:tmkt3_app/features/home/condonacion/condonacion_get_screen.dart';
 import 'package:tmkt3_app/features/home/deuda/deuda_get_screen.dart';
 import 'package:tmkt3_app/features/home/escalas/escalas_get_screen.dart';
+import 'package:tmkt3_app/features/home/pagos/pago_get_screen.dart';
 import 'package:tmkt3_app/features/home/principal/home_admin_screen.dart';
+import 'package:tmkt3_app/features/home/recibos/recibo_get_screen.dart';
+import 'package:tmkt3_app/features/home/usuarios/usuarios_get_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -32,7 +36,7 @@ class MainApp extends ConsumerWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightThemeMode,
-      home: AsigEscalaScreen(),
+      home: DeudaGetScreen(),
     );
   }
 }

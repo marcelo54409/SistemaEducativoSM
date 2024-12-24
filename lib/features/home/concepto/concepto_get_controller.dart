@@ -1,4 +1,5 @@
 import 'dart:developer';
+import 'package:dropdown_textfield/dropdown_textfield.dart';
 import 'package:flutter/material.dart';
 import 'package:tmkt3_app/core/services/api_dio.dart';
 import 'package:tmkt3_app/features/home/alumnos/model/alumno_model.dart';
@@ -12,15 +13,26 @@ class ConceptoGetController {
     this.context = context;
   }
 
-  Future<List<ConceptoModel>> getConceptos() async {
+  Future getConceptos({bool includeDropdown = false}) async {
     try {
       var response = await api.getRequest('/concepto');
       if (response != null) {
         List<ConceptoModel> alumnos = [];
+        List<DropDownValueModel> dropdownAlumnos = [];
         for (var item in response) {
-          alumnos.add(ConceptoModel.fromJson(item));
+          final concepto = ConceptoModel.fromJson(item);
+          alumnos.add(concepto);
+          dropdownAlumnos.add(DropDownValueModel(
+            value: concepto.idConcepto,
+            name: concepto.descripcion,
+          ));
         }
-        return alumnos;
+        // Retorna según el parámetro includeDropdown
+        if (includeDropdown) {
+          return {'alumnos': alumnos, 'dropdown': dropdownAlumnos};
+        } else {
+          return alumnos;
+        }
       } else {
         showMessage("Error al obtener la lista de conceptos", isError: true);
       }
@@ -28,7 +40,7 @@ class ConceptoGetController {
       log("Error en getConcepto: $e");
       showMessage("Error de conexión al servidor", isError: true);
     }
-    return [];
+    return includeDropdown ? {'alumnos': [], 'dropdown': []} : [];
   }
 
   Future<void> createAlumno(ConceptoModel alumno) async {

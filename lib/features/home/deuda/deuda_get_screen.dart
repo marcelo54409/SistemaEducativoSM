@@ -1,8 +1,18 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:tmkt3_app/core/widgets/custom_text_formulario.dart';
+import 'package:tmkt3_app/features/home/asignacion_concepto/asig_concepto_controller.dart';
+import 'package:tmkt3_app/features/home/asignacion_concepto/model/asig_concepto_model.dart';
+import 'package:tmkt3_app/features/home/asignacion_escala/asig_escala_controlador.dart';
+import 'package:tmkt3_app/features/home/asignacion_escala/model/asig_escala_model.dart';
+import 'package:tmkt3_app/features/home/concepto/concepto_get_controller.dart';
+import 'package:tmkt3_app/features/home/concepto/model/concepto_model.dart';
 import 'package:tmkt3_app/features/home/deuda/deuda_get_controller.dart';
 import 'package:tmkt3_app/features/home/deuda/model/deuda_model.dart';
+import 'package:tmkt3_app/features/home/escalas/escalas_get_controller.dart';
+import 'package:tmkt3_app/features/home/escalas/model/escalas_model.dart';
 import 'package:tmkt3_app/features/home/widgets/generic_list_screen.dart';
 
 class DeudaGetScreen extends StatefulWidget {
@@ -15,6 +25,11 @@ class _DeudaGetScreenState extends State<DeudaGetScreen> {
   final TextEditingController searchController = TextEditingController();
   List<DeudaModel> deudas = [];
   List<DeudaModel> filteredDeudas = [];
+  List<AsigEscalaModel> escalas = [];
+  List escalasindividual = [];
+  List<AsignarConceptoModel> conceptos = [];
+  List conceptosindividual = [];
+
   bool isLoading = true;
   String? errorMessage;
 
@@ -47,8 +62,17 @@ class _DeudaGetScreenState extends State<DeudaGetScreen> {
         errorMessage = null;
       });
       final response = await con.getDeudasWithAlumnoNames();
+      final escala = await AsigEscalaController().getAsignacionesEscala();
+      final concepto =
+          await AsignarConceptoController().getAsignacionesConcepto();
+      final escalaindividual = await EscalasController().getEscalas();
+      final conceptoindividual = await ConceptoGetController().getConceptos();
       setState(() {
         deudas = response;
+        escalas = escala;
+        conceptos = concepto;
+        escalasindividual = escalaindividual;
+        conceptosindividual = conceptoindividual;
         filteredDeudas = response;
         isLoading = false;
       });
@@ -174,34 +198,66 @@ class _DeudaGetScreenState extends State<DeudaGetScreen> {
     }
 
     final columns = [
-      DataColumn(label: Text("ID Alumno")),
-      DataColumn(label: Text("ID Escala")),
-      DataColumn(label: Text("ID Concepto")),
+      DataColumn(label: Text("Alumno")),
+      DataColumn(label: Text("Escala")),
+      DataColumn(label: Text("Concepto")),
+      DataColumn(label: Text("Monto")),
       DataColumn(label: Text("Fecha")),
       DataColumn(label: Text("Acciones")),
     ];
 
-    final rows = filteredDeudas
-        .map(
-          (deuda) => DataRow(
-            cells: [
-              DataCell(Text(deuda.nombreAlumno ?? "Desconocido")),
-              DataCell(Text(deuda.idAsignarEscala.toString())),
-              DataCell(Text(deuda.idAsignarConcepto.toString())),
-              DataCell(Text(deuda.fecha)),
-              DataCell(
-                Row(
-                  children: [
-                    OutlinedButton(onPressed: () {}, child: Text("Condonar")),
-                    SizedBox(width: 12),
-                    OutlinedButton(onPressed: () {}, child: Text("Pagar"))
-                  ],
-                ),
+    final rows = filteredDeudas.map(
+      (deuda) {
+        final escala = escalas.firstWhere(
+          (escala) => escala.idAsignarEscala == deuda.idAsignarEscala,
+          orElse: () => AsigEscalaModel(
+              idAsignarEscala: 0,
+              idAlumno: 0,
+              idEscala: 0,
+              fechaAsignacion: ""),
+        );
+
+        final concepto = conceptos.firstWhere(
+          (concepto) => concepto.idAsignarConcepto == deuda.idAsignarConcepto,
+          orElse: () => AsignarConceptoModel(
+              idAsignarConcepto: 0, idEscala: 0, idConcepto: 0),
+        );
+        final escalaIndividual = escalasindividual.firstWhere(
+          (escala) => escala.idEscala == escala.idEscala,
+          orElse: () =>
+              EscalasModel(idEscala: 0, escala: "", descripcion: "", monto: 0),
+        );
+        final conceptoIndividual = conceptosindividual.firstWhere(
+          (concepto) => concepto.idConcepto == concepto.idConcepto,
+          orElse: () =>
+              ConceptoModel(idConcepto: 0, concepto: "", descripcion: ""),
+        );
+        return DataRow(
+          cells: [
+            DataCell(Text(deuda.nombreAlumno ?? "Desconocido")),
+            DataCell(Text(escalaIndividual.descripcion)),
+            DataCell(Text(conceptoIndividual.descripcion)),
+            DataCell(Text(escalaIndividual.monto.toString())),
+            DataCell(Text(deuda.fecha)),
+            DataCell(
+              Row(
+                children: [
+                  OutlinedButton(onPressed: () {}, child: Text("Condonar")),
+                  SizedBox(width: 12),
+                  OutlinedButton(
+                      onPressed: () async {
+                        await con.pagarDeuda(deuda);
+                        escalaIndividual.monto = 0;
+                        setState(() {});
+                      },
+                      child: Text("Pagar"))
+                ],
               ),
-            ],
-          ),
-        )
-        .toList();
+            ),
+          ],
+        );
+      },
+    ).toList();
 
     return isLoading
         ? const Center(child: CircularProgressIndicator())

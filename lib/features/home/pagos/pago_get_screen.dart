@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:tmkt3_app/core/widgets/custom_text_formulario.dart';
+import 'package:tmkt3_app/features/home/deuda/deuda_get_controller.dart';
+import 'package:tmkt3_app/features/home/deuda/model/deuda_model.dart';
+import 'package:tmkt3_app/features/home/padres/model/padre_model.dart';
 import 'package:tmkt3_app/features/home/pagos/model/pago_model.dart';
 import 'package:tmkt3_app/features/home/pagos/pago_get_controller.dart';
 import 'package:tmkt3_app/features/home/widgets/generic_list_screen.dart';
@@ -15,6 +18,8 @@ class _PagoGetScreenState extends State<PagoGetScreen> {
   final TextEditingController searchController = TextEditingController();
   List<PagoModel> pagos = [];
   List<PagoModel> filteredPagos = [];
+  List<PadreModel> padres = [];
+  List<DeudaModel> deudas = [];
   bool isLoading = true;
   String? errorMessage;
 
@@ -48,8 +53,13 @@ class _PagoGetScreenState extends State<PagoGetScreen> {
         errorMessage = null;
       });
       final response = await con.getPagos();
+      final padre = await con.getPadres();
+      final deuda = await DeudaController().getDeudasWithAlumnoNames();
+
       setState(() {
         pagos = response;
+        deudas = deuda;
+        padres = padre;
         filteredPagos = response;
         isLoading = false;
       });
@@ -186,52 +196,52 @@ class _PagoGetScreenState extends State<PagoGetScreen> {
     }
 
     final columns = [
-      DataColumn(label: Text("ID Padre")),
-      DataColumn(label: Text("ID Alumno")),
-      DataColumn(label: Text("ID Deuda")),
+      DataColumn(label: Text("Padre")),
+      DataColumn(label: Text("Alumno")),
+      DataColumn(label: Text("Deuda")),
       DataColumn(label: Text("Fecha de Pago")),
       DataColumn(label: Text("Estado de Pago")),
       DataColumn(label: Text("Acciones")),
     ];
 
-    final rows = filteredPagos
-        .map(
-          (pago) => DataRow(
-            cells: [
-              DataCell(Text(pago.idPadre.toString())),
-              DataCell(Text(pago.idAlumno.toString())),
-              DataCell(Text(pago.idDeuda.toString())),
-              DataCell(Text(pago.fechaPago)),
-              DataCell(Text(pago.estadoPago)),
-              DataCell(
-                Row(
-                  children: [
-                    IconButton(
-                      icon: const Icon(
-                        Icons.edit,
-                        color: Colors.blueAccent,
-                      ),
-                      onPressed: () {
-                        _showRegisterForm(context, pago: pago);
-                      },
-                    ),
-                    IconButton(
-                      icon: const Icon(
-                        Icons.delete,
-                        color: Colors.red,
-                      ),
-                      onPressed: () async {
-                        await con.deletePago(pago.idPago);
-                        await _loadPagos();
-                      },
-                    ),
-                  ],
+    final rows = filteredPagos.map((pago) {
+      final padre = padres.firstWhere((padre) => padre.idPadre == pago.idPadre);
+      final deuda = deudas.firstWhere((deuda) => deuda.idDeuda == pago.idDeuda);
+      return DataRow(
+        cells: [
+          DataCell(Text("${padre.primerNombre} ${padre.apellidoPaterno}")),
+          DataCell(Text(deuda.nombreAlumno ?? "Desconocido")),
+          DataCell(Text(pago.idDeuda.toString())),
+          DataCell(Text(pago.fechaPago)),
+          DataCell(Text(pago.estadoPago)),
+          DataCell(
+            Row(
+              children: [
+                IconButton(
+                  icon: const Icon(
+                    Icons.edit,
+                    color: Colors.blueAccent,
+                  ),
+                  onPressed: () {
+                    _showRegisterForm(context, pago: pago);
+                  },
                 ),
-              ),
-            ],
+                IconButton(
+                  icon: const Icon(
+                    Icons.delete,
+                    color: Colors.red,
+                  ),
+                  onPressed: () async {
+                    await con.deletePago(pago.idPago);
+                    await _loadPagos();
+                  },
+                ),
+              ],
+            ),
           ),
-        )
-        .toList();
+        ],
+      );
+    }).toList();
 
     return isLoading
         ? const Center(child: CircularProgressIndicator())

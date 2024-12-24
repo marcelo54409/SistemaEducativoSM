@@ -44,6 +44,25 @@ class DeudaController {
     return [];
   }
 
+  Future<void> pagarDeuda(DeudaModel deuda) async {
+    try {
+      final body = {"idDeuda": deuda.idDeuda, "fecha": deuda.fecha};
+      var response = await api.postRequest('/pago/pagar-deuda', body);
+      log(response.toString());
+      if (response["message"] != null) {
+        showMessage(response?['message']);
+      } else {
+        showMessage(
+          response?['message'] ?? "Error al registrar la deuda",
+          isError: true,
+        );
+      }
+    } catch (e) {
+      log("Error en createDeuda: $e");
+      showMessage("Error de conexión al servidor", isError: true);
+    }
+  }
+
   Future<void> createDeuda(DeudaModel deuda) async {
     try {
       var response = await api.postRequest('/deuda', deuda.toJson());
