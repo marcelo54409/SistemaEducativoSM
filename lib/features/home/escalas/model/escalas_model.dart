@@ -2,7 +2,7 @@ class EscalasModel {
   final int idEscala;
   final String escala;
   final String descripcion;
-  final double monto;
+  double monto;
 
   EscalasModel({
     required this.idEscala,

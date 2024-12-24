@@ -1,3 +1,6 @@
+import 'dart:developer';
+
+import 'package:dropdown_textfield/dropdown_textfield.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:tmkt3_app/core/widgets/custom_text_formulario.dart';
@@ -20,6 +23,8 @@ class _PagoGetScreenState extends State<PagoGetScreen> {
   List<PagoModel> filteredPagos = [];
   List<PadreModel> padres = [];
   List<DeudaModel> deudas = [];
+
+  List<DropDownValueModel> dropdownDeudas = [];
   bool isLoading = true;
   String? errorMessage;
 
@@ -54,11 +59,13 @@ class _PagoGetScreenState extends State<PagoGetScreen> {
       });
       final response = await con.getPagos();
       final padre = await con.getPadres();
-      final deuda = await DeudaController().getDeudasWithAlumnoNames();
+      final deuda = await DeudaController()
+          .getDeudasWithAlumnoNames(includeDropdown: true);
 
       setState(() {
         pagos = response;
-        deudas = deuda;
+        deudas = deuda["deudas"];
+        dropdownDeudas = deuda["dropdown"];
         padres = padre;
         filteredPagos = response;
         isLoading = false;
@@ -85,6 +92,8 @@ class _PagoGetScreenState extends State<PagoGetScreen> {
           TextEditingController(text: pago?.fechaPago ?? '');
       final TextEditingController estadoPagoController =
           TextEditingController(text: pago?.estadoPago ?? '');
+      SingleValueDropDownController dropdownController =
+          SingleValueDropDownController();
 
       showDialog(
         context: context,
@@ -205,8 +214,18 @@ class _PagoGetScreenState extends State<PagoGetScreen> {
     ];
 
     final rows = filteredPagos.map((pago) {
-      final padre = padres.firstWhere((padre) => padre.idPadre == pago.idPadre);
-      final deuda = deudas.firstWhere((deuda) => deuda.idDeuda == pago.idDeuda);
+      log("Pago: $pago");
+      final padre = padres.firstWhere(
+        (padre) => padre.idPadre == pago.idPadre,
+        orElse: () => PadreModel(), // Devuelve null si no encuentra un elemento
+      );
+      final deuda = deudas.firstWhere((deuda) => deuda.idDeuda == pago.idDeuda,
+          orElse: () => DeudaModel(
+              idDeuda: 0,
+              idAlumno: 0,
+              idAsignarEscala: 0,
+              idAsignarConcepto: 0,
+              fecha: "No fecha"));
       return DataRow(
         cells: [
           DataCell(Text("${padre.primerNombre} ${padre.apellidoPaterno}")),
@@ -217,15 +236,6 @@ class _PagoGetScreenState extends State<PagoGetScreen> {
           DataCell(
             Row(
               children: [
-                IconButton(
-                  icon: const Icon(
-                    Icons.edit,
-                    color: Colors.blueAccent,
-                  ),
-                  onPressed: () {
-                    _showRegisterForm(context, pago: pago);
-                  },
-                ),
                 IconButton(
                   icon: const Icon(
                     Icons.delete,
@@ -252,7 +262,7 @@ class _PagoGetScreenState extends State<PagoGetScreen> {
                 title: "Lista de Pagos",
                 columns: columns,
                 rows: rows,
-                onAdd: () => _showRegisterForm(context),
+                onAdd: null,
                 onExport: () {},
               );
   }

@@ -36,4 +36,9 @@ class PagoModel {
       'estadoPago': estadoPago,
     };
   }
+
+  @override
+  String toString() {
+    return 'PagoModel(idPago: $idPago, idPadre: $idPadre, idAlumno: $idAlumno, idDeuda: $idDeuda, fechaPago: $fechaPago, estadoPago: $estadoPago)';
+  }
 }

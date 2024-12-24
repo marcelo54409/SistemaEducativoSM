@@ -29,6 +29,8 @@ class _DeudaGetScreenState extends State<DeudaGetScreen> {
   List escalasindividual = [];
   List<AsignarConceptoModel> conceptos = [];
   List conceptosindividual = [];
+  Set<int> deudasPagadas = {};
+  Set<int> deudasCondonadas = {};
 
   bool isLoading = true;
   String? errorMessage;
@@ -222,35 +224,135 @@ class _DeudaGetScreenState extends State<DeudaGetScreen> {
           orElse: () => AsignarConceptoModel(
               idAsignarConcepto: 0, idEscala: 0, idConcepto: 0),
         );
+
         final escalaIndividual = escalasindividual.firstWhere(
           (escala) => escala.idEscala == escala.idEscala,
           orElse: () =>
               EscalasModel(idEscala: 0, escala: "", descripcion: "", monto: 0),
         );
+
         final conceptoIndividual = conceptosindividual.firstWhere(
           (concepto) => concepto.idConcepto == concepto.idConcepto,
           orElse: () =>
               ConceptoModel(idConcepto: 0, concepto: "", descripcion: ""),
         );
+
+        final bool estaPagada = deudasPagadas.contains(deuda.idDeuda);
+        final bool estaCondonada = deudasCondonadas.contains(deuda.idDeuda);
+        final bool deudaLiquidada = estaPagada || estaCondonada;
+
         return DataRow(
           cells: [
             DataCell(Text(deuda.nombreAlumno ?? "Desconocido")),
             DataCell(Text(escalaIndividual.descripcion)),
             DataCell(Text(conceptoIndividual.descripcion)),
-            DataCell(Text(escalaIndividual.monto.toString())),
+            DataCell(Text(
+                deudaLiquidada ? "0.0" : escalaIndividual.monto.toString())),
             DataCell(Text(deuda.fecha)),
             DataCell(
               Row(
                 children: [
-                  OutlinedButton(onPressed: () {}, child: Text("Condonar")),
+                  OutlinedButton(
+                      onPressed: deudaLiquidada
+                          ? null
+                          : () async {
+                              final shouldCondone = await showDialog<bool>(
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return AlertDialog(
+                                    title: Text(
+                                      "Confirmar Condonación",
+                                      style: TextStyle(color: Colors.black),
+                                    ),
+                                    content: Text(
+                                        "¿Estás seguro de que deseas condonar esta deuda? Esta acción no se puede deshacer."),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () {
+                                          Navigator.of(context).pop(false);
+                                        },
+                                        child: Text("Cancelar"),
+                                      ),
+                                      TextButton(
+                                        onPressed: () {
+                                          Navigator.of(context).pop(true);
+                                        },
+                                        child: Text("Condonar"),
+                                      ),
+                                    ],
+                                  );
+                                },
+                              );
+
+                              if (shouldCondone == true) {
+                                await con.condonarDeuda(deuda);
+                                setState(() {
+                                  deudasCondonadas.add(deuda.idDeuda);
+                                });
+
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      "La deuda ha sido condonada.",
+                                      style: TextStyle(color: Colors.white),
+                                    ),
+                                    backgroundColor: Colors.green,
+                                  ),
+                                );
+                              }
+                            },
+                      child: Text("Condonar")),
                   SizedBox(width: 12),
                   OutlinedButton(
-                      onPressed: () async {
-                        await con.pagarDeuda(deuda);
-                        escalaIndividual.monto = 0;
-                        setState(() {});
-                      },
-                      child: Text("Pagar"))
+                    onPressed: deudaLiquidada
+                        ? null
+                        : () async {
+                            final shouldPay = await showDialog<bool>(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return AlertDialog(
+                                  title: Text(
+                                    "Confirmar Pago",
+                                    style: TextStyle(color: Colors.black),
+                                  ),
+                                  content: Text(
+                                      "¿Estás seguro de que deseas pagar esta deuda? Esta acción no se puede deshacer."),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () {
+                                        Navigator.of(context).pop(false);
+                                      },
+                                      child: Text("Cancelar"),
+                                    ),
+                                    TextButton(
+                                      onPressed: () {
+                                        Navigator.of(context).pop(true);
+                                      },
+                                      child: Text("Pagar"),
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
+
+                            if (shouldPay == true) {
+                              setState(() {
+                                deudasPagadas.add(deuda.idDeuda);
+                              });
+
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    "La deuda ha sido pagada.",
+                                    style: TextStyle(color: Colors.white),
+                                  ),
+                                  backgroundColor: Colors.green,
+                                ),
+                              );
+                            }
+                          },
+                    child: Text("Pagar"),
+                  ),
                 ],
               ),
             ),

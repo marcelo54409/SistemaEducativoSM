@@ -36,7 +36,7 @@ class MainApp extends ConsumerWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightThemeMode,
-      home: DeudaGetScreen(),
+      home: ReciboGetScreen(),
     );
   }
 }

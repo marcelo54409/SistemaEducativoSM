@@ -1,6 +1,11 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:tmkt3_app/core/widgets/custom_text_formulario.dart';
+import 'package:tmkt3_app/features/home/deuda/deuda_get_controller.dart';
+import 'package:tmkt3_app/features/home/deuda/model/deuda_model.dart';
+import 'package:tmkt3_app/features/home/pagos/paypal_service.dart';
 import 'package:tmkt3_app/features/home/recibos/model/recibo_model.dart';
 import 'package:tmkt3_app/features/home/recibos/recibo_get_controller.dart';
 import 'package:tmkt3_app/features/home/widgets/generic_list_screen.dart';
@@ -15,6 +20,7 @@ class _ReciboGetScreenState extends State<ReciboGetScreen> {
   final TextEditingController searchController = TextEditingController();
   List<ReciboModel> recibos = [];
   List<ReciboModel> filteredRecibos = [];
+  List<DeudaModel> deudas = [];
   bool isLoading = true;
   String? errorMessage;
 
@@ -48,9 +54,11 @@ class _ReciboGetScreenState extends State<ReciboGetScreen> {
         errorMessage = null;
       });
       final response = await con.getRecibos();
+      final deuda = await DeudaController().getDeudasWithAlumnoNames();
       setState(() {
         recibos = response;
         filteredRecibos = response;
+        deudas = deuda;
         isLoading = false;
       });
     } catch (e) {
@@ -58,6 +66,28 @@ class _ReciboGetScreenState extends State<ReciboGetScreen> {
         errorMessage = e.toString();
         isLoading = false;
       });
+    }
+  }
+
+  Future<void> processPayment(ReciboModel recibo) async {
+    try {
+      // Assuming orderId is stored in nOperacion
+      await PayPalService.handlePayment(
+        recibo.nOperacion,
+        double.parse(recibo.importe),
+      );
+
+      // Add a payment status check
+      final captured = await PayPalService.capturePayment(recibo.nOperacion);
+      if (captured) {
+        // Update local payment status
+
+        await _loadRecibos();
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error en el pago: ${e.toString()}')),
+      );
     }
   }
 
@@ -178,7 +208,7 @@ class _ReciboGetScreenState extends State<ReciboGetScreen> {
                             formaPago: formaPagoController.text,
                             nOperacion: nOperacionController.text,
                             fechaEmision: fechaEmisionController.text,
-                            importe: double.parse(importeController.text),
+                            importe: importeController.text,
                           );
                           if (newRecibo.idRecibo != 0) {
                             await con.updateRecibo(newRecibo);
@@ -200,8 +230,7 @@ class _ReciboGetScreenState extends State<ReciboGetScreen> {
     }
 
     final columns = [
-      DataColumn(label: Text("ID Alumno")),
-      DataColumn(label: Text("ID Deuda")),
+      DataColumn(label: Text("Alumno")),
       DataColumn(label: Text("Forma de Pago")),
       DataColumn(label: Text("Número de Operación")),
       DataColumn(label: Text("Fecha de Emisión")),
@@ -209,45 +238,55 @@ class _ReciboGetScreenState extends State<ReciboGetScreen> {
       DataColumn(label: Text("Acciones")),
     ];
 
-    final rows = filteredRecibos
-        .map(
-          (recibo) => DataRow(
-            cells: [
-              DataCell(Text(recibo.idAlumno.toString())),
-              DataCell(Text(recibo.idDeuda.toString())),
-              DataCell(Text(recibo.formaPago)),
-              DataCell(Text(recibo.nOperacion)),
-              DataCell(Text(recibo.fechaEmision)),
-              DataCell(Text(recibo.importe.toString())),
-              DataCell(
-                Row(
-                  children: [
-                    IconButton(
-                      icon: const Icon(
-                        Icons.edit,
-                        color: Colors.blueAccent,
-                      ),
-                      onPressed: () {
-                        _showRegisterForm(context, recibo: recibo);
-                      },
-                    ),
-                    IconButton(
-                      icon: const Icon(
-                        Icons.delete,
-                        color: Colors.red,
-                      ),
-                      onPressed: () async {
-                        await con.deleteRecibo(recibo.idRecibo);
-                        await _loadRecibos();
-                      },
-                    ),
-                  ],
+    final rows = filteredRecibos.map((recibo) {
+      final deuda = deudas.firstWhere(
+          (deuda) => deuda.idDeuda == recibo.idDeuda,
+          orElse: () => DeudaModel(
+              idDeuda: 0,
+              idAlumno: 0,
+              idAsignarEscala: 0,
+              idAsignarConcepto: 0,
+              fecha: ""));
+      log("Deuda: $deudas");
+      return DataRow(
+        cells: [
+          DataCell(Text(deuda.nombreAlumno ?? "Desconocido")),
+          DataCell(Text(recibo.formaPago)),
+          DataCell(Text(recibo.nOperacion)),
+          DataCell(Text(recibo.fechaEmision)),
+          DataCell(Text(recibo.importe.toString())),
+          DataCell(
+            Row(
+              children: [
+                IconButton(
+                  icon: const Icon(
+                    Icons.edit,
+                    color: Colors.blueAccent,
+                  ),
+                  onPressed: () {
+                    _showRegisterForm(context, recibo: recibo);
+                  },
                 ),
-              ),
-            ],
+                IconButton(
+                  icon: const Icon(
+                    Icons.delete,
+                    color: Colors.red,
+                  ),
+                  onPressed: () async {
+                    await con.deleteRecibo(recibo.idRecibo);
+                    await _loadRecibos();
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(Icons.payment),
+                  onPressed: () => processPayment(recibo),
+                ),
+              ],
+            ),
           ),
-        )
-        .toList();
+        ],
+      );
+    }).toList();
 
     return isLoading
         ? const Center(child: CircularProgressIndicator())

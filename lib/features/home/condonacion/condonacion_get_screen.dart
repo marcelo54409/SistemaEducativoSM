@@ -5,6 +5,10 @@ import 'package:flutter/scheduler.dart';
 import 'package:tmkt3_app/core/widgets/custom_text_formulario.dart';
 import 'package:tmkt3_app/features/home/alumnos/alumnos_get_controller.dart';
 import 'package:tmkt3_app/features/home/alumnos/model/alumno_model.dart';
+import 'package:tmkt3_app/features/home/asignacion_concepto/asig_concepto_controller.dart';
+import 'package:tmkt3_app/features/home/asignacion_concepto/model/asig_concepto_model.dart';
+import 'package:tmkt3_app/features/home/asignacion_escala/asig_escala_controlador.dart';
+import 'package:tmkt3_app/features/home/asignacion_escala/model/asig_escala_model.dart';
 import 'package:tmkt3_app/features/home/concepto/concepto_get_controller.dart';
 import 'package:tmkt3_app/features/home/concepto/model/concepto_model.dart';
 import 'package:tmkt3_app/features/home/condonacion/condonacion_get_controller.dart';
@@ -29,6 +33,8 @@ class _CondonacionGetScreenState extends State<CondonacionGetScreen> {
   List<DeudaModel> deudas = [];
   List<ConceptoModel> conceptos = [];
   List<CondonacionModel> filteredCondonaciones = [];
+  List<AsigEscalaModel> asigEscala = [];
+  List<AsignarConceptoModel> asigConcepto = [];
   bool isLoading = true;
   String? errorMessage;
 
@@ -66,10 +72,15 @@ class _CondonacionGetScreenState extends State<CondonacionGetScreen> {
       final escala = await EscalasController().getEscalas();
       final concepto = await ConceptoGetController().getConceptos();
       final deuda = await DeudaController().getDeudasWithAlumnoNames();
+      final asigEs = await AsigEscalaController().getAsignacionesEscala();
+      final asigCon =
+          await AsignarConceptoController().getAsignacionesConcepto();
 
       setState(() {
         escalas = escala;
         conceptos = concepto;
+        asigEscala = asigEs;
+        asigConcepto = asigCon;
         deudas = deuda;
         condonaciones = response;
         filteredCondonaciones = response;
@@ -171,6 +182,7 @@ class _CondonacionGetScreenState extends State<CondonacionGetScreen> {
       DataColumn(label: Text("Escala")),
       DataColumn(label: Text("Concepto")),
       DataColumn(label: Text("Fecha")),
+      DataColumn(label: Text("Monto")),
       DataColumn(label: Text("Acciones")),
     ];
 
@@ -186,10 +198,30 @@ class _CondonacionGetScreenState extends State<CondonacionGetScreen> {
           nombreAlumno: "",
         ),
       );
-      log("${deuda.nombreAlumno}");
+      log("${condonacion.toString()}");
+
+      final asigEs = asigEscala.firstWhere(
+        (asigEscala) => asigEscala.idAsignarEscala == deuda.idAsignarEscala,
+        orElse: () => AsigEscalaModel(
+          idAsignarEscala: 0,
+          idEscala: 0,
+          idAlumno: 0,
+          fechaAsignacion: "",
+        ),
+      );
+
+      final asigCon = asigConcepto.firstWhere(
+        (asigConcepto) =>
+            asigConcepto.idAsignarConcepto == deuda.idAsignarConcepto,
+        orElse: () => AsignarConceptoModel(
+          idAsignarConcepto: 0,
+          idConcepto: 0,
+          idEscala: 0,
+        ),
+      );
 
       final escala = escalas.firstWhere(
-        (escala) => escala.idEscala == deuda.idAsignarEscala,
+        (escala) => escala.idEscala == asigEs.idEscala,
         orElse: () => EscalasModel(
           idEscala: 0,
           escala: "No asignado",
@@ -198,7 +230,7 @@ class _CondonacionGetScreenState extends State<CondonacionGetScreen> {
         ),
       );
       final concepto = conceptos.firstWhere(
-        (concepto) => concepto.idConcepto == deuda.idAsignarConcepto,
+        (concepto) => concepto.idConcepto == asigCon.idConcepto,
         orElse: () => ConceptoModel(
           idConcepto: 0,
           concepto: "No asignado",
@@ -211,18 +243,10 @@ class _CondonacionGetScreenState extends State<CondonacionGetScreen> {
           DataCell(Text(escala.descripcion)),
           DataCell(Text(concepto.descripcion)),
           DataCell(Text(condonacion.fecha)),
+          DataCell(Text(escala.monto.toString())),
           DataCell(
             Row(
               children: [
-                IconButton(
-                  icon: const Icon(
-                    Icons.edit,
-                    color: Colors.blueAccent,
-                  ),
-                  onPressed: () {
-                    _showRegisterForm(context, condonacion: condonacion);
-                  },
-                ),
                 IconButton(
                   icon: const Icon(
                     Icons.delete,
@@ -249,7 +273,7 @@ class _CondonacionGetScreenState extends State<CondonacionGetScreen> {
                 title: "Lista de Condonaciones",
                 columns: columns,
                 rows: rows,
-                onAdd: () => _showRegisterForm(context),
+                onAdd: null,
                 onExport: () {},
               );
   }

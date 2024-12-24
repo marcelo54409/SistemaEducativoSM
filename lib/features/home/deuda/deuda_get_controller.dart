@@ -1,4 +1,5 @@
 import 'dart:developer';
+import 'package:dropdown_textfield/dropdown_textfield.dart';
 import 'package:flutter/material.dart';
 import 'package:tmkt3_app/core/services/api_dio.dart';
 import 'package:tmkt3_app/features/home/alumnos/model/alumno_model.dart';
@@ -12,12 +13,13 @@ class DeudaController {
     this.context = context;
   }
 
-  Future<List<DeudaModel>> getDeudasWithAlumnoNames() async {
+  Future getDeudasWithAlumnoNames({bool includeDropdown = false}) async {
     try {
       var responseDeudas = await api.getRequest('/deuda');
       var responseAlumnos = await api.getRequest('/alumnos');
 
       if (responseDeudas != null && responseAlumnos != null) {
+        // Crear un mapa de idAlumno a nombreAlumno
         Map<int, String> alumnosMap = {
           for (var alumno in responseAlumnos)
             alumno['idAlumno']:
@@ -27,12 +29,26 @@ class DeudaController {
 
         // Vincular nombres de alumnos a las deudas
         List<DeudaModel> deudas = [];
+        List<DropDownValueModel> dropdownDeudas = [];
         for (var item in responseDeudas) {
           final deuda = DeudaModel.fromJson(item);
           deuda.nombreAlumno = alumnosMap[deuda.idAlumno] ?? 'Desconocido';
           deudas.add(deuda);
+
+          // Crear una entrada para el dropdown
+          dropdownDeudas.add(DropDownValueModel(
+            value: deuda.idDeuda, // ID de la deuda
+            name:
+                "${deuda.nombreAlumno} ", // Nombre del alumno y monto de la deuda
+          ));
         }
-        return deudas;
+
+        // Retorna según el parámetro includeDropdown
+        if (includeDropdown) {
+          return {'deudas': deudas, 'dropdown': dropdownDeudas};
+        } else {
+          return deudas;
+        }
       } else {
         showMessage("Error al obtener la lista de deudas o alumnos",
             isError: true);
@@ -41,7 +57,7 @@ class DeudaController {
       print("Error en getDeudasWithAlumnoNames: $e");
       showMessage("Error de conexión al servidor", isError: true);
     }
-    return [];
+    return includeDropdown ? {'deudas': [], 'dropdown': []} : [];
   }
 
   Future<void> pagarDeuda(DeudaModel deuda) async {
@@ -53,7 +69,27 @@ class DeudaController {
         showMessage(response?['message']);
       } else {
         showMessage(
-          response?['message'] ?? "Error al registrar la deuda",
+          response?['message'] ?? "Error al pagar la deuda",
+          isError: true,
+        );
+      }
+    } catch (e) {
+      log("Error en createDeuda: $e");
+      showMessage("Error de conexión al servidor", isError: true);
+    }
+  }
+
+  Future<void> condonarDeuda(DeudaModel deuda) async {
+    try {
+      final body = {"idDeuda": deuda.idDeuda, "fecha": deuda.fecha};
+      var response =
+          await api.postRequest('/condonaciones/condonar-deuda', body);
+      log(response.toString());
+      if (response["message"] != null) {
+        showMessage(response?['message']);
+      } else {
+        showMessage(
+          response?['message'] ?? "Error al condonar la deuda",
           isError: true,
         );
       }

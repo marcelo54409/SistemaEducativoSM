@@ -5,7 +5,7 @@ class ReciboModel {
   final String formaPago;
   final String nOperacion;
   final String fechaEmision;
-  final double importe;
+  final String importe;
 
   ReciboModel({
     required this.idRecibo,
@@ -25,7 +25,7 @@ class ReciboModel {
       formaPago: json['formaPago'] ?? '',
       nOperacion: json['nOperacion'] ?? '',
       fechaEmision: json['fechaEmision'] ?? '',
-      importe: (json['importe'] ?? 0).toDouble(),
+      importe: json['importe'],
     );
   }
 
@@ -39,5 +39,10 @@ class ReciboModel {
       'fechaEmision': fechaEmision,
       'importe': importe,
     };
+  }
+
+  @override
+  String toString() {
+    return 'ReciboModel(idRecibo: $idRecibo, idAlumno: $idAlumno, idDeuda: $idDeuda, formaPago: $formaPago, nOperacion: $nOperacion, fechaEmision: $fechaEmision, importe: $importe)';
   }
 }

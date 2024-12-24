@@ -24,4 +24,21 @@ class CondonacionModel {
       'fecha': fecha,
     };
   }
+
+  CondonacionModel copyWith({
+    int? idCondonacion,
+    int? idDeuda,
+    String? fecha,
+  }) {
+    return CondonacionModel(
+      idCondonacion: idCondonacion ?? this.idCondonacion,
+      idDeuda: idDeuda ?? this.idDeuda,
+      fecha: fecha ?? this.fecha,
+    );
+  }
+
+  @override
+  String toString() {
+    return 'CondonacionModel(idCondonacion: $idCondonacion, idDeuda: $idDeuda, fecha: $fecha)';
+  }
 }
